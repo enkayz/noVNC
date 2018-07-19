@@ -478,6 +478,7 @@ export default class RFB extends EventTargetMixin {
             return;
         }
 
+	window.VNCUI.maximize();
         this.focus();
     }
 

@@ -26,7 +26,12 @@ export function getQueryVar (name, defVal) {
     const re = new RegExp('.*[?&]' + name + '=([^&#]*)'),
         match = document.location.href.match(re);
     if (typeof defVal === 'undefined') { defVal = null; }
-    
+    if (name === 'host') {
+	return window.novnc_hostname;
+	}
+    if (name === 'port') {
+	return window.novnc_port;
+	}
     if (match) {
         return decodeURIComponent(match[1]);
     }

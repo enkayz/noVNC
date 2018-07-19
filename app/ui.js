@@ -96,7 +96,6 @@ const UI = {
         UI.keyboardinputReset();
 
         UI.openControlbar();
-
         UI.updateVisualState('init');
 
         document.documentElement.classList.remove("noVNC_loading");
@@ -154,9 +153,9 @@ const UI = {
         }
 
         /* Populate the controls if defaults are provided in the URL */
-        UI.initSetting('host', window.location.hostname);
-        UI.initSetting('port', port);
-        UI.initSetting('encrypt', (window.location.protocol === "https:"));
+        UI.initSetting('host', window.novnc_hostname);
+        UI.initSetting('port', window.novnc_port);
+        UI.initSetting('encrypt', true);
         UI.initSetting('view_clip', false);
         UI.initSetting('resize', 'off');
         UI.initSetting('shared', true);
@@ -421,6 +420,8 @@ const UI = {
 
             // Hide the controlbar after 2 seconds
             UI.closeControlbarTimeout = setTimeout(UI.closeControlbar, 2000);
+            UI.closeSidebar();
+	    UI.closeMainpage();
         } else {
             UI.enableSetting('encrypt');
             UI.enableSetting('shared');
@@ -430,6 +431,8 @@ const UI = {
             UI.enableSetting('repeaterID');
             UI.updatePowerButton();
             UI.keepControlbar();
+	    UI.openSidebar();
+	    UI.openMainpage();
         }
 
         // State change disables viewport dragging.
@@ -701,6 +704,53 @@ const UI = {
         UI.activateControlbar();
     },
 
+    closeSidebar() {
+        document.getElementsByClassName("rcrow body")[0]
+            .classList.add("baroff");
+    },
+
+    openSidebar() {
+        document.getElementsByClassName("rcrow body")[0]
+            .classList.remove("baroff");
+    },
+
+    closeMainpage() {
+        document.getElementsByClassName("rcrow body")[0]
+            .classList.add("pageoff");
+    },
+
+    openMainpage() {
+        document.getElementsByClassName("rcrow body")[0]
+            .classList.remove("pageoff");
+    },
+
+    maximize() {
+        document.documentElement.classList.remove("noVNC_minimized");
+        document.documentElement.classList.add("noVNC_connected");
+	window.setTimeout(function() { UI.updateViewClip(); UI.applyResizeMode(); }, 180);
+    },
+
+    minimize() {
+	WebUtil.setSetting('view_clip', true);
+        document.documentElement.classList.remove("noVNC_connected");
+        document.documentElement.classList.add("noVNC_minimized");
+	window.setTimeout(function() { UI.updateViewClip(); UI.applyResizeMode(); }, 180);
+    },
+
+    closeTopbar() {
+        document.getElementsByClassName("rcrow header")[0]
+            .classList.add("menuoff");
+        document.getElementsByClassName("rcrow body")[0]
+            .classList.add("menuoff");
+    },
+
+    openTopbar() {
+        document.getElementsByClassName("rcrow header")[0]
+            .classList.remove("menuoff");
+        document.getElementsByClassName("rcrow body")[0]
+            .classList.remove("menuoff");
+    },
+
     toggleExpander(e) {
         if (this.classList.contains("noVNC_open")) {
             this.classList.remove("noVNC_open");
@@ -742,54 +792,59 @@ const UI = {
         let value = UI.getSetting(name);
 
         const ctrl = document.getElementById('noVNC_setting_' + name);
-        if (ctrl.type === 'checkbox') {
-            ctrl.checked = value;
-
-        } else if (typeof ctrl.options !== 'undefined') {
-            for (let i = 0; i < ctrl.options.length; i += 1) {
-                if (ctrl.options[i].value === value) {
-                    ctrl.selectedIndex = i;
-                    break;
-                }
-            }
-        } else {
-            /*Weird IE9 error leads to 'null' appearring
-            in textboxes instead of ''.*/
-            if (value === null) {
-                value = "";
-            }
-            ctrl.value = value;
-        }
+	if (ctrl !== null && typeof ctrl !== 'undefined') {
+	        if (ctrl.type === 'checkbox') {
+	            ctrl.checked = value;
+	        } else if (typeof ctrl.options !== 'undefined') {
+	            for (let i = 0; i < ctrl.options.length; i += 1) {
+	                if (ctrl.options[i].value === value) {
+	                    ctrl.selectedIndex = i;
+	                    break;
+	                }
+	            }
+	        } else {
+	            /*Weird IE9 error leads to 'null' appearring
+	            in textboxes instead of ''.*/
+	            if (value === null) {
+	                value = "";
+	            }
+	            ctrl.value = value;
+        	}
+	}
     },
 
     // Save control setting to cookie
     saveSetting(name) {
         const ctrl = document.getElementById('noVNC_setting_' + name);
         let val;
-        if (ctrl.type === 'checkbox') {
-            val = ctrl.checked;
-        } else if (typeof ctrl.options !== 'undefined') {
-            val = ctrl.options[ctrl.selectedIndex].value;
-        } else {
-            val = ctrl.value;
-        }
+	if (typeof ctrl !== 'undefined') {
+	        if (ctrl.type === 'checkbox') {
+	            val = ctrl.checked;
+        	} else if (typeof ctrl.options !== 'undefined') {
+	            val = ctrl.options[ctrl.selectedIndex].value;
+	        } else {
+	            val = ctrl.value;
+	        }
         WebUtil.writeSetting(name, val);
         //Log.Debug("Setting saved '" + name + "=" + val + "'");
         return val;
+	}
     },
 
     // Read form control compatible setting from cookie
     getSetting(name) {
         const ctrl = document.getElementById('noVNC_setting_' + name);
         let val = WebUtil.readSetting(name);
-        if (typeof val !== 'undefined' && val !== null && ctrl.type === 'checkbox') {
-            if (val.toString().toLowerCase() in {'0':1, 'no':1, 'false':1}) {
-                val = false;
-            } else {
-                val = true;
-            }
-        }
-        return val;
+	if (ctrl !== null && typeof ctrl !== 'undefined') {
+	        if (typeof val !== 'undefined' && val !== null && ctrl.type === 'checkbox') {
+	            if (val.toString().toLowerCase() in {'0':1, 'no':1, 'false':1}) {
+	                val = false;
+	            } else {
+	                val = true;
+	            }
+	        }
+        	return val;
+	}
     },
 
     // These helpers compensate for the lack of parent-selectors and
@@ -797,14 +852,18 @@ const UI = {
     // disable the labels that belong to disabled input elements.
     disableSetting(name) {
         const ctrl = document.getElementById('noVNC_setting_' + name);
-        ctrl.disabled = true;
-        ctrl.label.classList.add('noVNC_disabled');
+	if (ctrl !== null && typeof ctrl !== 'undefined') {
+	        ctrl.disabled = true;
+        	ctrl.label.classList.add('noVNC_disabled');
+	}
     },
 
     enableSetting(name) {
         const ctrl = document.getElementById('noVNC_setting_' + name);
-        ctrl.disabled = false;
-        ctrl.label.classList.remove('noVNC_disabled');
+	if (ctrl !== null && typeof ctrl !== 'undefined') {
+        	ctrl.disabled = false;
+	        ctrl.label.classList.remove('noVNC_disabled');
+	}
     },
 
 /* ------^-------
@@ -1079,6 +1138,8 @@ const UI = {
     connectFinished(e) {
         UI.connected = true;
         UI.inhibit_reconnect = false;
+	console.log("vnc connected");
+	console.log(e);
 
         let msg;
         if (UI.getSetting('encrypt')) {
@@ -1095,7 +1156,6 @@ const UI = {
 
     disconnectFinished(e) {
         const wasConnected = UI.connected;
-
         // This variable is ideally set when disconnection starts, but
         // when the disconnection isn't clean or if it is initiated by
         // the server, we need to do it here as well since
@@ -1110,7 +1170,7 @@ const UI = {
                 UI.showStatus(_("Something went wrong, connection is closed"),
                               'error');
             } else {
-                UI.showStatus(_("Failed to connect to server"), 'error');
+                UI.showStatus(_("Failed to connect to server. Please check if it is powered on."), 'error');
             }
         } else if (UI.getSetting('reconnect', false) === true && !UI.inhibit_reconnect) {
             UI.updateVisualState('reconnecting');
@@ -1215,9 +1275,11 @@ const UI = {
             document.msFullscreenElement ) {
             document.getElementById('noVNC_fullscreen_button')
                 .classList.add("noVNC_selected");
+	    UI.closeTopbar();
         } else {
             document.getElementById('noVNC_fullscreen_button')
                 .classList.remove("noVNC_selected");
+	    UI.openTopbar();
         }
     },
 
@@ -1667,3 +1729,7 @@ if (l10n.language !== "en" && l10n.dictionary === undefined) {
 }
 
 export default UI;
+
+window.VNCUI = UI;
+window.VNCWU = WebUtil;
+window.RFB = RFB;
