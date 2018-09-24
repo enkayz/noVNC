@@ -161,9 +161,9 @@ html {
   margin-top: 3px;
 }
 
-:root:not(.noVNC_touch) input[type=button]:hover:not(:disabled),
-:root:not(.noVNC_touch) input[type=submit]:hover:not(:disabled),
-:root:not(.noVNC_touch) select:hover:not(:disabled) {
+#noVNC_parent input[type=button]:hover:not(:disabled),
+#noVNC_parent input[type=submit]:hover:not(:disabled),
+#noVNC_parent  select:hover:not(:disabled) {
   background: linear-gradient(to top, rgb(255, 255, 255), rgb(250, 250, 250));
 }
 
@@ -773,7 +773,7 @@ html {
   border-bottom-width: 1px;
   margin-top: 3px;
 }
-:root:not(.noVNC_touch) #noVNC_connect_button div:hover {
+#noVNC_parent :root:not(.noVNC_touch) #noVNC_connect_button div:hover {
   background: linear-gradient(to top, rgb(110, 132, 163), rgb(105, 125, 155));
 }
 
