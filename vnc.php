@@ -151,7 +151,6 @@
                                     <li>
                                         <label for="noVNC_setting_port">Port:</label>
                                         <input id="noVNC_setting_port" type="number" value="<?=($deviceDetails->extra["SYS_WEBSOCKETVERSION"] == 1?(5001+$deviceDetails->id):(5900+4800+$deviceDetails->id))?>" />
-					</input>
                                     </li>
                                     <li>
                                         <label for="noVNC_setting_path">Path:</label>
